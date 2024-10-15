@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film App</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .film-card { border: 1px solid #ccc; padding: 10px; margin: 10px; cursor: pointer; }
+        .film-list { display: flex; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+<h1>Liste de Films</h1>
+
+<div>
+    <input type="text" id="searchTitle" placeholder="Filtrer par titre">
+    <input type="number" id="searchRating" placeholder="Filtrer par note">
+    <button onclick="filterFilms()">Filtrer</button>
+</div>
+
+<div class="film-list" id="filmList"></div>
+
+<h2>Ajouter un nouveau film</h2>
+<form id="filmForm" onsubmit="addFilm(event)">
+    <input type="text" id="The Woman King" placeholder="The women king" required>
+    <input type="text" id="description" placeholder="Au XIXème siècle, les Amazones du Dahomey mènent une lutte acharnée contre les colons français" required>
+    <input type="text" id="posterURL" placeholder="https://image.tmdb.org/t/p/w185_and_h278_bestv2//mEXD8pae0drdyKMtZykv3p8brHb.jpg" required>
+    <input type="number" id="note" placeholder="Note" required min="1" max="10">
+    <input type="text" id="bandeAnnonce" placeholder="https://youtu.be/Xd3cgHuJ3uM" required>
+    <button type="submit">Ajouter</button>
+</form>
+
+<script>
+    async function fetchFilms() {
+        const response = await fetch('http://localhost:3000/api/films');
+        const films = await response.json();
+        displayFilms(films);
+    }
+
+    function displayFilms(films) {
+        const filmList = document.getElementById('filmList');
+        filmList.innerHTML = '';
+        films.forEach((film, index) => {
+            const filmCard = document.createElement('div');
+            filmCard.className = 'film-card';
+            filmCard.innerHTML = `
+                <h3>${film.titre}</h3>
+                <img src="${film.posterURL}" alt="${film.titre}" style="width:100px;">
+                <p>Note: ${film.note}</p>
+            `;
+            filmCard.onclick = () => showFilmDetail(index);
+            filmList.appendChild(filmCard);
+        });
+    }
+
+    async function addFilm(event) {
+        event.preventDefault();
+        const film = {
+            titre: document.getElementById('titre').value,
+            description: document.getElementById('description').value,
+            posterURL: document.getElementById('posterURL').value,
+            note: document.getElementById('note').value,
+            bandeAnnonce: document.getElementById('bandeAnnonce').value
+        };
+        await fetch('http://localhost:3000/api/films', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(film)
+        });
+        fetchFilms();
+        document.getElementById('filmForm').reset();
+    }
+
+    function filterFilms() {
+        const title = document.getElementById('searchTitle').value.toLowerCase();
+        const rating = document.getElementById('searchRating').value;
+
+        const filteredFilms = films.filter(film => {
+            return (film.titre.toLowerCase().includes(title) || title === '') &&
+                   (film.note >= rating || rating === '');
+        });
+
+        displayFilms(filteredFilms);
+    }
+
+    function showFilmDetail(index) {
+        const film = films[index];
+        alert(`Description: ${film.description}\nBande-Annonce: ${film.bandeAnnonce}`);
+    }
+
+    fetchFilms();
+</script>
+
+</body>
+</html>
